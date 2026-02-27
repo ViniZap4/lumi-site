@@ -64,23 +64,25 @@
   const architectureDiagram = `┌─────────────────┐          ┌──────────────┐
 │   TUI Client    │          │  Web Client  │
 │ (Go + Bubbletea)│          │  (Svelte 5)  │
-│ direct FS R/W   │          │  HTTP + WS   │
 └────────┬────────┘          └──────┬───────┘
          │                          │
-         │ filesystem               │ HTTP/WebSocket
+         │ direct R/W               │ HTTP + WebSocket
+         │ + optional WS            │
          │                          │
-         │                  ┌───────▼─────────┐
-         │                  │   Go Server      │
-         │                  │  REST + WS Hub   │
-         │                  └────────┬─────────┘
-         │                           │
-         └───────────┬───────────────┘
-                     │
-            ┌────────▼──────────┐
-            │   Filesystem      │
-            │ Markdown + YAML   │
-            │   frontmatter     │
-            └───────────────────┘`;
+         │        ┌─────────────────┘
+         │        │
+         │  ┌─────▼───────────┐     ┌─────────────┐
+         │  │   Go Server     │◄───►│ Peer Servers │
+         │  │  REST + WS Hub  │     │  (optional)  │
+         │  └─────────┬───────┘     └─────────────┘
+         │            │
+         └──────┬─────┘
+                │
+       ┌────────▼──────────┐
+       │    Filesystem     │
+       │  Markdown + YAML  │
+       │   frontmatter     │
+       └───────────────────┘`;
 
   const techStack = [
     { name: 'Go', url: 'https://go.dev' },
@@ -204,13 +206,16 @@
     </div>
     <div class="flex flex-col gap-2">
       <p class="text-sm" style="color: var(--color-text-dim);">
-        <span style="color: var(--color-primary);">TUI client</span> reads/writes the filesystem directly — no server needed.
+        <span style="color: var(--color-primary);">TUI client</span> reads/writes the filesystem directly and can optionally connect to the server via WebSocket for real-time sync.
       </p>
       <p class="text-sm" style="color: var(--color-text-dim);">
         <span style="color: var(--color-primary);">Web client</span> connects through the Go server via REST + WebSocket.
       </p>
       <p class="text-sm" style="color: var(--color-text-dim);">
-        Both share the same note format: <span style="color: var(--color-primary);">Markdown + YAML frontmatter</span>.
+        <span style="color: var(--color-primary);">Servers</span> can peer with each other for multi-instance sync.
+      </p>
+      <p class="text-sm" style="color: var(--color-text-dim);">
+        All clients share the same note format: <span style="color: var(--color-primary);">Markdown + YAML frontmatter</span>.
       </p>
     </div>
   </section>
