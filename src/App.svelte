@@ -1,13 +1,24 @@
 <script>
   import { onMount } from 'svelte';
   import ThemePicker from './lib/ThemePicker.svelte';
-  import { applyTheme, loadTheme } from './lib/themes.js';
+  import { applyTheme, resolveTheme, loadThemeSettings, watchSystemTheme } from './lib/themes.js';
 
-  let currentTheme = $state('tokyo-night');
+  let mode = $state('dark');
+  let darkName = $state('tokyo-night');
+  let lightName = $state('tokyo-day');
 
   onMount(() => {
-    currentTheme = loadTheme();
-    applyTheme(currentTheme);
+    const settings = loadThemeSettings();
+    mode = settings.mode;
+    darkName = settings.darkName;
+    lightName = settings.lightName;
+    applyTheme(resolveTheme(mode, darkName, lightName));
+
+    return watchSystemTheme(() => {
+      if (mode === 'auto') {
+        applyTheme(resolveTheme(mode, darkName, lightName));
+      }
+    });
   });
 
   const logoLines = [
@@ -97,6 +108,45 @@
     { name: 'WebSocket', url: 'https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API' },
   ];
 
+  const apiEndpoints = [
+    { method: 'POST', path: '/api/auth', desc: 'Validate token (login)' },
+    { method: 'GET', path: '/api/folders', desc: 'List all folders' },
+    { method: 'GET', path: '/api/notes', desc: 'List notes' },
+    { method: 'GET', path: '/api/notes/:id', desc: 'Get note by ID' },
+    { method: 'POST', path: '/api/notes', desc: 'Create note' },
+    { method: 'PUT', path: '/api/notes/:id', desc: 'Update note' },
+    { method: 'DELETE', path: '/api/notes/:id', desc: 'Delete note' },
+    { method: 'WS', path: '/ws?token=<token>', desc: 'Real-time updates' },
+  ];
+
+  const tuiKeybindings = [
+    { keys: 'j / k', desc: 'Move down / up' },
+    { keys: 'h / l', desc: 'Switch panels or cycle values' },
+    { keys: 'gg / G', desc: 'Jump to top / bottom' },
+    { keys: '/', desc: 'Search / filter' },
+    { keys: 'e / Enter', desc: 'Edit note in $EDITOR' },
+    { keys: 'n', desc: 'Create new note' },
+    { keys: 'd', desc: 'Delete note' },
+    { keys: 'c', desc: 'Open settings' },
+    { keys: 'q', desc: 'Quit' },
+  ];
+
+  const webKeybindings = [
+    { keys: 'j / k', desc: 'Navigate up / down' },
+    { keys: '/', desc: 'Search notes' },
+    { keys: 'Enter', desc: 'Open note or submit' },
+    { keys: 'Esc', desc: 'Go back / close dialogs' },
+  ];
+
+  const envVars = [
+    { name: 'LUMI_PASSWORD', default: 'dev', desc: 'Password for login and API access' },
+    { name: 'LUMI_ROOT', default: './notes', desc: 'Notes directory' },
+    { name: 'LUMI_PORT', default: '8080', desc: 'Server port' },
+    { name: 'LUMI_SERVER_ID', default: 'auto', desc: 'Unique ID for peer sync' },
+    { name: 'LUMI_PEERS', default: '—', desc: 'Comma-separated peer URLs' },
+    { name: 'VITE_LUMI_SERVER_URL', default: 'http://localhost:8080', desc: 'Server URL (build-time)' },
+  ];
+
   const repos = [
     { name: 'lumi', desc: 'Monorepo', url: 'https://github.com/ViniZap4/lumi' },
     { name: 'lumi-tui', desc: 'TUI Client', url: 'https://github.com/ViniZap4/lumi-tui' },
@@ -114,8 +164,9 @@
     <div class="flex items-center gap-4">
       <a href="#features" class="text-xs hidden sm:inline" style="color: var(--color-text-dim);">features</a>
       <a href="#architecture" class="text-xs hidden sm:inline" style="color: var(--color-text-dim);">architecture</a>
+      <a href="#docs" class="text-xs hidden sm:inline" style="color: var(--color-text-dim);">docs</a>
       <a href="#getting-started" class="text-xs hidden sm:inline" style="color: var(--color-text-dim);">get started</a>
-      <ThemePicker bind:current={currentTheme} />
+      <ThemePicker bind:mode bind:darkName bind:lightName />
     </div>
   </nav>
 
@@ -222,6 +273,147 @@
       <p class="text-sm" style="color: var(--color-text-dim);">
         All clients share the same note format: <span style="color: var(--color-primary);">Markdown + YAML frontmatter</span>.
       </p>
+    </div>
+  </section>
+
+  <!-- Documentation -->
+  <section id="docs" class="py-20 px-8 max-w-[1100px] mx-auto">
+    <h2 class="text-2xl font-semibold mb-8" style="color: var(--color-text);">
+      <span style="color: var(--color-primary);">#</span> Documentation
+    </h2>
+
+    <!-- API Reference -->
+    <div class="mb-10">
+      <h3 class="text-lg font-semibold mb-4" style="color: var(--color-secondary);">API Reference</h3>
+      <p class="text-sm mb-4" style="color: var(--color-text-dim);">
+        All REST endpoints require the <code class="px-1.5 py-0.5 rounded text-xs" style="background: var(--color-selected-bg); color: var(--color-accent);">X-Lumi-Token</code> header. WebSocket requires a <code class="px-1.5 py-0.5 rounded text-xs" style="background: var(--color-selected-bg); color: var(--color-accent);">?token=</code> query param.
+      </p>
+      <div class="rounded-xl border overflow-hidden" style="border-color: var(--color-border); background: var(--color-background);">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="background: var(--color-selected-bg); border-bottom: 1px solid var(--color-border);">
+              <th class="text-left px-4 py-2.5 font-medium" style="color: var(--color-text-dim);">Method</th>
+              <th class="text-left px-4 py-2.5 font-medium" style="color: var(--color-text-dim);">Endpoint</th>
+              <th class="text-left px-4 py-2.5 font-medium hidden sm:table-cell" style="color: var(--color-text-dim);">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each apiEndpoints as ep, i}
+              <tr style="border-bottom: {i < apiEndpoints.length - 1 ? '1px solid var(--color-separator)' : 'none'};">
+                <td class="px-4 py-2 font-mono text-xs" style="color: {ep.method === 'WS' ? 'var(--color-warning)' : ep.method === 'GET' ? 'var(--color-accent)' : ep.method === 'POST' ? 'var(--color-info)' : ep.method === 'PUT' ? 'var(--color-secondary)' : ep.method === 'DELETE' ? 'var(--color-error)' : 'var(--color-text)'};">{ep.method}</td>
+                <td class="px-4 py-2 font-mono text-xs" style="color: var(--color-text);">{ep.path}</td>
+                <td class="px-4 py-2 text-xs hidden sm:table-cell" style="color: var(--color-text-dim);">{ep.desc}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Keybindings -->
+    <div class="mb-10">
+      <h3 class="text-lg font-semibold mb-4" style="color: var(--color-secondary);">Keybindings</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- TUI keybindings -->
+        <div class="rounded-xl border overflow-hidden" style="border-color: var(--color-border); background: var(--color-background);">
+          <div class="px-4 py-2.5 border-b" style="background: var(--color-selected-bg); border-color: var(--color-border);">
+            <span class="text-sm font-medium" style="color: var(--color-primary);">TUI Client</span>
+          </div>
+          {#each tuiKeybindings as kb, i}
+            <div class="flex items-center justify-between px-4 py-2" style="border-bottom: {i < tuiKeybindings.length - 1 ? '1px solid var(--color-separator)' : 'none'};">
+              <code class="text-xs px-1.5 py-0.5 rounded" style="background: var(--color-selected-bg); color: var(--color-accent);">{kb.keys}</code>
+              <span class="text-xs" style="color: var(--color-text-dim);">{kb.desc}</span>
+            </div>
+          {/each}
+        </div>
+        <!-- Web keybindings -->
+        <div class="rounded-xl border overflow-hidden" style="border-color: var(--color-border); background: var(--color-background);">
+          <div class="px-4 py-2.5 border-b" style="background: var(--color-selected-bg); border-color: var(--color-border);">
+            <span class="text-sm font-medium" style="color: var(--color-primary);">Web Client</span>
+          </div>
+          {#each webKeybindings as kb, i}
+            <div class="flex items-center justify-between px-4 py-2" style="border-bottom: {i < webKeybindings.length - 1 ? '1px solid var(--color-separator)' : 'none'};">
+              <code class="text-xs px-1.5 py-0.5 rounded" style="background: var(--color-selected-bg); color: var(--color-accent);">{kb.keys}</code>
+              <span class="text-xs" style="color: var(--color-text-dim);">{kb.desc}</span>
+            </div>
+          {/each}
+        </div>
+      </div>
+    </div>
+
+    <!-- Note Format -->
+    <div class="mb-10">
+      <h3 class="text-lg font-semibold mb-4" style="color: var(--color-secondary);">Note Format</h3>
+      <p class="text-sm mb-4" style="color: var(--color-text-dim);">
+        Notes are standard Markdown files with YAML frontmatter for metadata. No database, no vendor lock-in — just files.
+      </p>
+      <div class="rounded-xl border overflow-hidden" style="border-color: var(--color-border); background: var(--color-background);">
+        <div class="flex items-center gap-2 px-4 py-2.5 border-b"
+          style="border-color: var(--color-border); background: var(--color-selected-bg);">
+          <span class="text-xs" style="color: var(--color-text-dim);">example-note.md</span>
+        </div>
+        <pre class="p-4 text-xs leading-relaxed overflow-x-auto whitespace-pre" style="color: var(--color-text);"><span style="color: var(--color-muted);">---</span>
+<span style="color: var(--color-accent);">id</span>: <span style="color: var(--color-text);">2026-example-note</span>
+<span style="color: var(--color-accent);">title</span>: <span style="color: var(--color-text);">Example Note</span>
+<span style="color: var(--color-accent);">created_at</span>: <span style="color: var(--color-text);">2026-02-16T11:00:00-03:00</span>
+<span style="color: var(--color-accent);">updated_at</span>: <span style="color: var(--color-text);">2026-02-16T11:05:00-03:00</span>
+<span style="color: var(--color-accent);">tags</span>:
+  - <span style="color: var(--color-secondary);">example</span>
+  - <span style="color: var(--color-secondary);">markdown</span>
+<span style="color: var(--color-muted);">---</span>
+
+<span style="color: var(--color-primary);"># Content</span>
+
+This is the note content in <span style="color: var(--color-secondary);">**Markdown**</span>.</pre>
+      </div>
+    </div>
+
+    <!-- Environment Variables -->
+    <div class="mb-10">
+      <h3 class="text-lg font-semibold mb-4" style="color: var(--color-secondary);">Environment Variables</h3>
+      <div class="rounded-xl border overflow-hidden" style="border-color: var(--color-border); background: var(--color-background);">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="background: var(--color-selected-bg); border-bottom: 1px solid var(--color-border);">
+              <th class="text-left px-4 py-2.5 font-medium" style="color: var(--color-text-dim);">Variable</th>
+              <th class="text-left px-4 py-2.5 font-medium hidden sm:table-cell" style="color: var(--color-text-dim);">Default</th>
+              <th class="text-left px-4 py-2.5 font-medium" style="color: var(--color-text-dim);">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each envVars as ev, i}
+              <tr style="border-bottom: {i < envVars.length - 1 ? '1px solid var(--color-separator)' : 'none'};">
+                <td class="px-4 py-2 font-mono text-xs" style="color: var(--color-accent);">{ev.name}</td>
+                <td class="px-4 py-2 font-mono text-xs hidden sm:table-cell" style="color: var(--color-muted);">{ev.default}</td>
+                <td class="px-4 py-2 text-xs" style="color: var(--color-text-dim);">{ev.desc}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div>
+      <h3 class="text-lg font-semibold mb-4" style="color: var(--color-secondary);">FAQ</h3>
+      <div class="flex flex-col gap-3">
+        <div class="rounded-xl border p-4" style="border-color: var(--color-border); background: var(--color-background);">
+          <p class="text-sm font-medium mb-1" style="color: var(--color-text);">Can I use lumi without the server?</p>
+          <p class="text-xs" style="color: var(--color-text-dim);">Yes! The TUI works completely offline with local files.</p>
+        </div>
+        <div class="rounded-xl border p-4" style="border-color: var(--color-border); background: var(--color-background);">
+          <p class="text-sm font-medium mb-1" style="color: var(--color-text);">What happens if I edit a file outside of lumi?</p>
+          <p class="text-xs" style="color: var(--color-text-dim);">Changes are detected automatically. The TUI refreshes on focus, and the web client receives realtime updates.</p>
+        </div>
+        <div class="rounded-xl border p-4" style="border-color: var(--color-border); background: var(--color-background);">
+          <p class="text-sm font-medium mb-1" style="color: var(--color-text);">How do I export my notes?</p>
+          <p class="text-xs" style="color: var(--color-text-dim);">They're already plain Markdown files! Just copy the folder.</p>
+        </div>
+        <div class="rounded-xl border p-4" style="border-color: var(--color-border); background: var(--color-background);">
+          <p class="text-sm font-medium mb-1" style="color: var(--color-text);">Can multiple people use the same notes?</p>
+          <p class="text-xs" style="color: var(--color-text-dim);">Yes, if they share the same notes directory. The server broadcasts changes to all connected clients. Multiple servers can also federate via LUMI_PEERS.</p>
+        </div>
+      </div>
     </div>
   </section>
 
