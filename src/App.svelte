@@ -42,7 +42,12 @@
     {
       icon: '⚡',
       title: 'Real-time sync',
-      desc: 'WebSocket-powered live updates keep the web client in sync. File changes propagate instantly across all connected clients.',
+      desc: 'Authenticated WebSocket-powered live updates keep the web client in sync. File changes propagate instantly across all connected clients.',
+    },
+    {
+      icon: '🔒',
+      title: 'Token auth',
+      desc: 'Password-gated web client with persistent sessions. All API and WebSocket connections are authenticated via token.',
     },
     {
       icon: '📝',
