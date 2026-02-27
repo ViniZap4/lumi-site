@@ -47,7 +47,7 @@
     {
       icon: '🔒',
       title: 'Token auth',
-      desc: 'Password-gated web client with persistent sessions. All API and WebSocket connections are authenticated via token.',
+      desc: 'Password-gated web client with persistent sessions. All API and WebSocket connections are authenticated via token. One command to deploy with Docker Compose.',
     },
     {
       icon: '📝',
@@ -247,8 +247,8 @@ git clone --recurse-submodules https://github.com/ViniZap4/lumi.git
 <span style="color: var(--color-primary);">cd</span> tui-client && go build -o lumi && ./lumi ../notes
 
 <span style="color: var(--color-muted);"># Server + Web Client (Docker)</span>
-cp .env.example .env
-docker-compose up -d</pre>
+cp .env.example .env          <span style="color: var(--color-muted);"># set LUMI_PASSWORD</span>
+docker compose up -d          <span style="color: var(--color-muted);"># web on :3000, API on :8080</span></pre>
     </div>
   </section>
 
