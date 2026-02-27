@@ -200,7 +200,7 @@
     </h2>
     <div class="rounded-xl border p-6 overflow-x-auto mb-6"
       style="border-color: var(--color-border); background: var(--color-background);">
-      <pre class="whitespace-pre leading-relaxed" style="font-size: clamp(0.55rem, 1.4vw, 0.85rem); color: var(--color-accent);">{architectureDiagram}</pre>
+      <pre class="whitespace-pre leading-tight" style="font-size: clamp(0.55rem, 1.4vw, 0.85rem); color: var(--color-accent);">{architectureDiagram}</pre>
     </div>
     <div class="flex flex-col gap-2">
       <p class="text-sm" style="color: var(--color-text-dim);">
