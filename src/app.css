@@ -1,5 +1,7 @@
-/* Tokyo Night theme — CSS custom properties */
-:root {
+@import "tailwindcss";
+
+@theme {
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
   --color-primary: #7aa2f7;
   --color-secondary: #bb9af7;
   --color-accent: #7dcfff;
@@ -20,16 +22,6 @@
   --color-logo-3: #7aa2f7;
   --color-logo-4: #7dcfff;
   --color-logo-5: #bb9af7;
-
-  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html {
@@ -40,14 +32,8 @@ body {
   font-family: var(--font-mono);
   background: var(--color-overlay-bg);
   color: var(--color-text);
-  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-#app {
-  width: 100%;
-  min-height: 100vh;
 }
 
 a {
