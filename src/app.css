@@ -1,0 +1,66 @@
+/* Tokyo Night theme — CSS custom properties */
+:root {
+  --color-primary: #7aa2f7;
+  --color-secondary: #bb9af7;
+  --color-accent: #7dcfff;
+  --color-muted: #565f89;
+  --color-background: #1a1b26;
+  --color-selected-bg: #292e42;
+  --color-overlay-bg: #16161e;
+  --color-text: #c0caf5;
+  --color-text-dim: #565f89;
+  --color-border: #3b4261;
+  --color-separator: #292e42;
+  --color-error: #f7768e;
+  --color-warning: #e0af68;
+  --color-info: #7dcfff;
+  --color-logo-0: #7aa2f7;
+  --color-logo-1: #7dcfff;
+  --color-logo-2: #bb9af7;
+  --color-logo-3: #7aa2f7;
+  --color-logo-4: #7dcfff;
+  --color-logo-5: #bb9af7;
+
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-mono);
+  background: var(--color-overlay-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--color-accent);
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-overlay-bg);
+}
