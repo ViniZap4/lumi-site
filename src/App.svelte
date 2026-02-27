@@ -120,9 +120,13 @@
     <div class="text-center p-8">
       <pre class="inline-block text-left whitespace-pre mb-6 leading-tight" style="font-size: clamp(0.4rem, 1.8vw, 1rem);" aria-label="LUMI">{#each logoLines as line, i}<span style="color: {logoColors[i]}">{line}</span>{#if i < logoLines.length - 1}
 {/if}{/each}</pre>
-      <p class="mx-auto mb-10 max-w-md" style="font-size: clamp(0.9rem, 2vw, 1.2rem); color: var(--color-text-dim);">
+      <p class="mx-auto mb-4 max-w-md" style="font-size: clamp(0.9rem, 2vw, 1.2rem); color: var(--color-text-dim);">
         A local-first, markdown-based note-taking system
       </p>
+      <div class="inline-block px-4 py-2 rounded-lg border mb-10 text-xs"
+        style="border-color: var(--color-warning); color: var(--color-warning); background: color-mix(in srgb, var(--color-warning) 8%, transparent);">
+        🚧 Under active development — features may change or be incomplete
+      </div>
       <div class="flex gap-3 justify-center flex-wrap">
         <a href="https://github.com/ViniZap4/lumi"
           class="inline-block px-6 py-3 rounded-lg font-mono text-sm transition-all duration-200 border"
