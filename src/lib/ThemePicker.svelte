@@ -8,12 +8,9 @@
     return resolveTheme(mode, darkName, lightName);
   }
 
-  function cycleMode() {
-    const modes = ['auto', 'dark', 'light'];
-    const idx = modes.indexOf(mode);
-    mode = modes[(idx + 1) % modes.length];
-    const resolved = resolveTheme(mode, darkName, lightName);
-    applyTheme(resolved);
+  function setMode(m) {
+    mode = m;
+    applyTheme(resolveTheme(mode, darkName, lightName));
     saveThemeSettings(mode, darkName, lightName);
   }
 
@@ -24,8 +21,7 @@
     } else {
       lightName = name;
     }
-    const resolved = resolveTheme(mode, darkName, lightName);
-    applyTheme(resolved);
+    applyTheme(resolveTheme(mode, darkName, lightName));
     saveThemeSettings(mode, darkName, lightName);
     open = false;
   }
@@ -38,18 +34,12 @@
     if (e.key === 'Escape') open = false;
   }
 
-  function visibleThemes() {
-    if (mode === 'dark') return darkThemeOrder;
-    if (mode === 'light') return lightThemeOrder;
-    return [...darkThemeOrder, ...lightThemeOrder];
-  }
-
   function isSelected(name) {
     const t = themes[name];
     return t.isDark ? name === darkName : name === lightName;
   }
 
-  const modeLabels = { auto: 'Auto', dark: 'Dark', light: 'Light' };
+  const modes = ['auto', 'dark', 'light'];
   const modeIcons = { auto: '◐', dark: '●', light: '○' };
 </script>
 
@@ -79,46 +69,74 @@
       aria-label="Close theme picker"
     ></button>
     <div
-      class="absolute right-0 top-full mt-2 z-50 rounded-lg border overflow-hidden min-w-52"
+      class="absolute right-0 top-full mt-2 z-50 rounded-lg border overflow-hidden min-w-56 max-h-[70vh] overflow-y-auto"
       style="background: var(--color-background); border-color: var(--color-border);"
     >
-      <!-- Mode toggle -->
-      <button
-        onclick={cycleMode}
-        class="w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors cursor-pointer border-b"
-        style="color: var(--color-primary); border-color: var(--color-border); background: var(--color-selected-bg);"
-        onmouseenter={(e) => e.currentTarget.style.background = 'var(--color-overlay-bg)'}
-        onmouseleave={(e) => e.currentTarget.style.background = 'var(--color-selected-bg)'}
-      >
-        <span>Mode</span>
-        <span class="flex items-center gap-1.5">
-          <span>{modeIcons[mode]}</span>
-          <span>{modeLabels[mode]}</span>
-        </span>
-      </button>
+      <!-- Mode selector -->
+      <div class="flex border-b" style="border-color: var(--color-border); background: var(--color-selected-bg);">
+        {#each modes as m}
+          <button
+            onclick={() => setMode(m)}
+            class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs transition-colors cursor-pointer"
+            style="color: {mode === m ? 'var(--color-primary)' : 'var(--color-text-dim)'}; background: {mode === m ? 'var(--color-overlay-bg)' : 'transparent'};"
+          >
+            <span>{modeIcons[m]}</span>
+            <span class="capitalize">{m}</span>
+          </button>
+        {/each}
+      </div>
 
-      <!-- Theme list -->
-      {#each visibleThemes() as name}
-        {@const t = themes[name]}
-        {@const selected = isSelected(name)}
-        <button
-          onclick={() => selectTheme(name)}
-          class="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors cursor-pointer"
-          style="color: {selected ? t.primary : 'var(--color-text-dim)'}; background: {selected ? 'var(--color-selected-bg)' : 'transparent'};"
-          onmouseenter={(e) => e.currentTarget.style.background = 'var(--color-selected-bg)'}
-          onmouseleave={(e) => e.currentTarget.style.background = selected ? 'var(--color-selected-bg)' : 'transparent'}
-        >
-          <div class="flex gap-1">
-            {#each t.logoColors.slice(0, 3) as color}
-              <span class="w-2.5 h-2.5 rounded-full" style="background: {color};"></span>
-            {/each}
-          </div>
-          <span>{t.name}</span>
-          {#if !t.isDark}
-            <span class="ml-auto text-xs opacity-50">light</span>
-          {/if}
-        </button>
-      {/each}
+      <!-- Dark themes -->
+      {#if mode !== 'light'}
+        <div class="px-3 pt-3 pb-1">
+          <span class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--color-muted);">Dark</span>
+        </div>
+        {#each darkThemeOrder as name}
+          {@const t = themes[name]}
+          {@const selected = isSelected(name)}
+          <button
+            onclick={() => selectTheme(name)}
+            class="w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors cursor-pointer"
+            style="color: {selected ? t.primary : 'var(--color-text-dim)'}; background: {selected ? 'var(--color-selected-bg)' : 'transparent'};"
+            onmouseenter={(e) => e.currentTarget.style.background = 'var(--color-selected-bg)'}
+            onmouseleave={(e) => e.currentTarget.style.background = selected ? 'var(--color-selected-bg)' : 'transparent'}
+          >
+            <div class="flex gap-0.5">
+              {#each t.logoColors.slice(0, 4) as color}
+                <span class="w-2 h-2 rounded-sm" style="background: {color};"></span>
+              {/each}
+            </div>
+            <span class="text-xs">{t.name}</span>
+          </button>
+        {/each}
+      {/if}
+
+      <!-- Light themes -->
+      {#if mode !== 'dark'}
+        <div class="px-3 pt-3 pb-1" style="border-top: {mode === 'auto' ? '1px solid var(--color-separator)' : 'none'};">
+          <span class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--color-muted);">Light</span>
+        </div>
+        {#each lightThemeOrder as name}
+          {@const t = themes[name]}
+          {@const selected = isSelected(name)}
+          <button
+            onclick={() => selectTheme(name)}
+            class="w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors cursor-pointer"
+            style="color: {selected ? t.primary : 'var(--color-text-dim)'}; background: {selected ? 'var(--color-selected-bg)' : 'transparent'};"
+            onmouseenter={(e) => e.currentTarget.style.background = 'var(--color-selected-bg)'}
+            onmouseleave={(e) => e.currentTarget.style.background = selected ? 'var(--color-selected-bg)' : 'transparent'}
+          >
+            <div class="flex gap-0.5">
+              {#each t.logoColors.slice(0, 4) as color}
+                <span class="w-2 h-2 rounded-sm" style="background: {color};"></span>
+              {/each}
+            </div>
+            <span class="text-xs">{t.name}</span>
+          </button>
+        {/each}
+      {/if}
+
+      <div class="h-1"></div>
     </div>
   {/if}
 </div>
