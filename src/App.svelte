@@ -8,10 +8,16 @@
   let darkName = $state('tokyo-night');
   let lightName = $state('tokyo-day');
   let route = $state('home');
+  let docsPage = $state('getting-started');
 
   function updateRoute() {
     const hash = window.location.hash;
-    route = hash === '#/docs' ? 'docs' : 'home';
+    if (hash.startsWith('#/docs')) {
+      route = 'docs';
+      docsPage = hash.replace('#/docs', '').replace(/^\//, '') || 'getting-started';
+    } else {
+      route = 'home';
+    }
   }
 
   onMount(() => {
@@ -150,7 +156,7 @@
 </nav>
 
 {#if route === 'docs'}
-  <DocsView />
+  <DocsView activePage={docsPage} />
 {:else}
   <main class="w-full overflow-x-hidden">
     <!-- Hero -->
