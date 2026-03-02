@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+  import type { Component } from 'svelte';
   import GettingStarted from './docs/GettingStarted.svelte';
   import UserGuide from './docs/UserGuide.svelte';
   import Configuration from './docs/Configuration.svelte';
@@ -12,8 +13,8 @@
   import GitSubmodules from './docs/GitSubmodules.svelte';
   import CodingStandards from './docs/CodingStandards.svelte';
 
-  let { activePage = 'getting-started' } = $props();
-  let sidebarOpen = $state(false);
+  let { activePage = 'getting-started' }: { activePage: string } = $props();
+  let sidebarOpen: boolean = $state(false);
 
   const groups = [
     {
@@ -45,7 +46,7 @@
     },
   ];
 
-  const pages = {
+  const pages: Record<string, Component> = {
     'getting-started': GettingStarted,
     'user-guide': UserGuide,
     'configuration': Configuration,

@@ -1,6 +1,34 @@
 // Theme definitions matching web-client exactly.
 
-export const themeOrder = [
+export type ThemeMode = 'dark' | 'light' | 'auto';
+
+export interface Theme {
+  name: string;
+  isDark: boolean;
+  primary: string;
+  secondary: string;
+  accent: string;
+  muted: string;
+  background: string;
+  selectedBg: string;
+  overlayBg: string;
+  text: string;
+  textDim: string;
+  border: string;
+  separator: string;
+  error: string;
+  warning: string;
+  info: string;
+  logoColors: string[];
+}
+
+export interface ThemeSettings {
+  mode: ThemeMode;
+  darkName: string;
+  lightName: string;
+}
+
+export const themeOrder: string[] = [
   'tokyo-night',
   'tokyo-day',
   'catppuccin-mocha',
@@ -15,7 +43,7 @@ export const themeOrder = [
   'obsidian',
 ];
 
-export const themes = {
+export const themes: Record<string, Theme> = {
   'tokyo-night': {
     name: 'Tokyo Night',
     isDark: true,
@@ -252,7 +280,7 @@ export const lightThemeOrder = themeOrder.filter(n => !themes[n].isDark);
 const STORAGE_KEY = 'lumi-site-theme';
 const SETTINGS_KEY = 'lumi-site-theme-settings';
 
-export function applyTheme(name) {
+export function applyTheme(name: string): void {
   const t = themes[name];
   if (!t) return;
   const root = document.documentElement;
@@ -280,14 +308,14 @@ export function applyTheme(name) {
   }
 }
 
-export function resolveTheme(mode, darkName, lightName) {
+export function resolveTheme(mode: ThemeMode, darkName: string, lightName: string): string {
   if (mode === 'dark') return darkName;
   if (mode === 'light') return lightName;
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return prefersDark ? darkName : lightName;
 }
 
-export function loadThemeSettings() {
+export function loadThemeSettings(): ThemeSettings {
   const saved = localStorage.getItem(SETTINGS_KEY);
   if (saved) {
     try {
@@ -308,11 +336,11 @@ export function loadThemeSettings() {
   return { mode: 'dark', darkName: 'tokyo-night', lightName: 'tokyo-day' };
 }
 
-export function saveThemeSettings(mode, darkName, lightName) {
+export function saveThemeSettings(mode: ThemeMode, darkName: string, lightName: string): void {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify({ mode, darkName, lightName }));
 }
 
-export function watchSystemTheme(callback) {
+export function watchSystemTheme(callback: (isDark: boolean) => void): () => void {
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
   const handler = (e) => callback(e.matches);
   mq.addEventListener('change', handler);

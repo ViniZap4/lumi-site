@@ -1,20 +1,21 @@
-<script>
-  import { themes, darkThemeOrder, lightThemeOrder, applyTheme, resolveTheme, saveThemeSettings } from './themes.js';
+<script lang="ts">
+  import { themes, darkThemeOrder, lightThemeOrder, applyTheme, resolveTheme, saveThemeSettings } from './themes.ts';
+  import type { ThemeMode } from './themes.ts';
 
-  let { mode = $bindable('dark'), darkName = $bindable('tokyo-night'), lightName = $bindable('tokyo-day') } = $props();
-  let open = $state(false);
+  let { mode = $bindable('dark'), darkName = $bindable('tokyo-night'), lightName = $bindable('tokyo-day') }: { mode: ThemeMode; darkName: string; lightName: string } = $props();
+  let open: boolean = $state(false);
 
-  function currentThemeName() {
+  function currentThemeName(): string {
     return resolveTheme(mode, darkName, lightName);
   }
 
-  function setMode(m) {
+  function setMode(m: ThemeMode): void {
     mode = m;
     applyTheme(resolveTheme(mode, darkName, lightName));
     saveThemeSettings(mode, darkName, lightName);
   }
 
-  function selectTheme(name) {
+  function selectTheme(name: string): void {
     const t = themes[name];
     if (t.isDark) {
       darkName = name;
@@ -26,21 +27,21 @@
     open = false;
   }
 
-  function toggle() {
+  function toggle(): void {
     open = !open;
   }
 
-  function handleKeydown(e) {
+  function handleKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') open = false;
   }
 
-  function isSelected(name) {
+  function isSelected(name: string): boolean {
     const t = themes[name];
     return t.isDark ? name === darkName : name === lightName;
   }
 
-  const modes = ['auto', 'dark', 'light'];
-  const modeIcons = { auto: '◐', dark: '●', light: '○' };
+  const modes: ThemeMode[] = ['auto', 'dark', 'light'];
+  const modeIcons: Record<ThemeMode, string> = { auto: '◐', dark: '●', light: '○' };
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

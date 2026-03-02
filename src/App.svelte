@@ -1,14 +1,15 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import ThemePicker from './lib/ThemePicker.svelte';
   import DocsView from './views/DocsView.svelte';
-  import { applyTheme, resolveTheme, loadThemeSettings, watchSystemTheme } from './lib/themes.js';
+  import { applyTheme, resolveTheme, loadThemeSettings, watchSystemTheme } from './lib/themes.ts';
+  import type { ThemeMode } from './lib/themes.ts';
 
-  let mode = $state('dark');
-  let darkName = $state('tokyo-night');
-  let lightName = $state('tokyo-day');
-  let route = $state('home');
-  let docsPage = $state('getting-started');
+  let mode: ThemeMode = $state('dark');
+  let darkName: string = $state('tokyo-night');
+  let lightName: string = $state('tokyo-day');
+  let route: string = $state('home');
+  let docsPage: string = $state('getting-started');
 
   function updateRoute() {
     const hash = window.location.hash;
