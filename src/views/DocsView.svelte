@@ -98,7 +98,7 @@
           {#each group.sections as s}
             <li>
               <a
-                href="#/docs/{s.id}"
+                href="/docs/{s.id}"
                 onclick={() => sidebarOpen = false}
                 class="block w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
                 style="color: {activePage === s.id ? 'var(--color-primary)' : 'var(--color-text-dim)'}; background: {activePage === s.id ? 'var(--color-selected-bg)' : 'transparent'};"
@@ -110,7 +110,7 @@
         </ul>
       {/each}
       <div class="mt-6 pt-4 border-t" style="border-color: var(--color-border);">
-        <a href="#/"
+        <a href="/"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors"
           style="color: var(--color-text-dim);"
         >

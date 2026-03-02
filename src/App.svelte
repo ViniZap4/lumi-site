@@ -11,13 +11,132 @@
   let route: string = $state('home');
   let docsPage: string = $state('getting-started');
 
+  const BASE_URL = 'https://lumi-note.vercel.app';
+
+  const pageMeta: Record<string, { title: string; description: string }> = {
+    home: {
+      title: 'Lumi — Local-first note-taking',
+      description: 'A local-first, markdown-based note-taking system with TUI and web clients. Plain markdown files, real-time sync, and no vendor lock-in.',
+    },
+    'getting-started': {
+      title: 'Getting Started — Lumi Docs',
+      description: 'Install and set up Lumi: clone the repo, build the TUI client, run the server, and launch the web client.',
+    },
+    'user-guide': {
+      title: 'User Guide — Lumi Docs',
+      description: 'Learn how to use Lumi: create notes, organize folders, search, and navigate the TUI and web clients.',
+    },
+    'configuration': {
+      title: 'Configuration — Lumi Docs',
+      description: 'Configure Lumi: environment variables, per-folder config, server settings, and TUI options.',
+    },
+    'note-format': {
+      title: 'Note Format — Lumi Docs',
+      description: 'Lumi note format: Markdown files with YAML frontmatter for ID, title, timestamps, and tags.',
+    },
+    'faq': {
+      title: 'FAQ — Lumi Docs',
+      description: 'Frequently asked questions about Lumi: troubleshooting, compatibility, and common workflows.',
+    },
+    'architecture': {
+      title: 'Architecture — Lumi Docs',
+      description: 'Lumi system architecture: TUI client, Go server, Svelte web client, WebSocket sync, and peer federation.',
+    },
+    'project-structure': {
+      title: 'Project Structure — Lumi Docs',
+      description: 'Lumi project structure: monorepo layout, submodule organization, and package conventions.',
+    },
+    'docker-environment': {
+      title: 'Docker & Environment — Lumi Docs',
+      description: 'Run Lumi with Docker Compose: container setup, environment variables, and production deployment.',
+    },
+    'api-reference': {
+      title: 'API Reference — Lumi Docs',
+      description: 'Lumi REST API and WebSocket reference: endpoints, authentication, request/response schemas, and peer federation.',
+    },
+    'development-setup': {
+      title: 'Development Setup — Lumi Docs',
+      description: 'Set up a Lumi development environment: Go, Node.js, and local server configuration.',
+    },
+    'git-submodules': {
+      title: 'Git & Submodules — Lumi Docs',
+      description: 'Working with Lumi git submodules: cloning, updating, and contributing across repositories.',
+    },
+    'coding-standards': {
+      title: 'Coding Standards — Lumi Docs',
+      description: 'Lumi coding conventions: Go style, Svelte patterns, commit messages, and code formatting.',
+    },
+  };
+
+  function updateMeta() {
+    const key = route === 'docs' ? docsPage : 'home';
+    const meta = pageMeta[key] || pageMeta['home'];
+    const canonicalPath = route === 'docs' ? `/docs/${docsPage}` : '/';
+    const canonicalUrl = `${BASE_URL}${canonicalPath}`;
+
+    document.title = meta.title;
+
+    const setMeta = (attr: string, key: string, value: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (el) el.setAttribute('content', value);
+    };
+
+    setMeta('property', 'og:title', meta.title);
+    setMeta('property', 'og:description', meta.description);
+    setMeta('property', 'og:url', canonicalUrl);
+    setMeta('name', 'twitter:title', meta.title);
+    setMeta('name', 'twitter:description', meta.description);
+    setMeta('name', 'description', meta.description);
+
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (canonical) canonical.href = canonicalUrl;
+  }
+
+  function navigate(path: string) {
+    window.history.pushState({}, '', path);
+    updateRoute();
+  }
+
   function updateRoute() {
-    const hash = window.location.hash;
-    if (hash.startsWith('#/docs')) {
+    const path = window.location.pathname;
+    if (path.startsWith('/docs')) {
       route = 'docs';
-      docsPage = hash.replace('#/docs', '').replace(/^\//, '') || 'getting-started';
+      docsPage = path.replace('/docs', '').replace(/^\//, '') || 'getting-started';
     } else {
       route = 'home';
+    }
+    updateMeta();
+  }
+
+  function handleClick(e: MouseEvent) {
+    const anchor = (e.target as Element).closest('a');
+    if (!anchor) return;
+
+    const href = anchor.getAttribute('href');
+    if (!href) return;
+
+    // Let external links, new-tab clicks, and modifier keys pass through
+    if (anchor.target === '_blank' || anchor.origin !== window.location.origin) return;
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+    // In-page anchor on the home page — let the browser scroll
+    if (href.startsWith('#') && !href.startsWith('#/')) {
+      if (route !== 'home') {
+        e.preventDefault();
+        navigate('/');
+        // After navigating home, scroll to anchor on next tick
+        const id = href.slice(1);
+        requestAnimationFrame(() => {
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+        });
+      }
+      return;
+    }
+
+    // Internal path navigation
+    if (href.startsWith('/')) {
+      e.preventDefault();
+      navigate(href);
     }
   }
 
@@ -29,7 +148,8 @@
     applyTheme(resolveTheme(mode, darkName, lightName));
 
     updateRoute();
-    window.addEventListener('hashchange', updateRoute);
+    window.addEventListener('popstate', updateRoute);
+    document.addEventListener('click', handleClick);
 
     const cleanup = watchSystemTheme(() => {
       if (mode === 'auto') {
@@ -38,7 +158,8 @@
     });
 
     return () => {
-      window.removeEventListener('hashchange', updateRoute);
+      window.removeEventListener('popstate', updateRoute);
+      document.removeEventListener('click', handleClick);
       cleanup();
     };
   });
@@ -142,13 +263,13 @@
 <!-- Nav (shared across all routes) -->
 <nav class="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-6 py-3"
   style="background: var(--color-overlay-bg); border-bottom: 1px solid var(--color-border);">
-  <a href="#/" class="text-sm font-semibold" style="color: var(--color-primary);">lumi</a>
+  <a href="/" class="text-sm font-semibold" style="color: var(--color-primary);">lumi</a>
   <div class="flex items-center gap-4">
     {#if route === 'home'}
       <a href="#features" class="text-xs hidden sm:inline" style="color: var(--color-text-dim);">features</a>
       <a href="#architecture" class="text-xs hidden sm:inline" style="color: var(--color-text-dim);">architecture</a>
     {/if}
-    <a href="#/docs" class="text-xs hidden sm:inline" style="color: {route === 'docs' ? 'var(--color-primary)' : 'var(--color-text-dim)'};">docs</a>
+    <a href="/docs" class="text-xs hidden sm:inline" style="color: {route === 'docs' ? 'var(--color-primary)' : 'var(--color-text-dim)'};">docs</a>
     {#if route === 'home'}
       <a href="#getting-started" class="text-xs hidden sm:inline" style="color: var(--color-text-dim);">get started</a>
     {/if}
@@ -185,7 +306,7 @@
           >
             GitHub
           </a>
-          <a href="#/docs"
+          <a href="/docs"
             class="inline-block px-6 py-3 rounded-lg font-mono text-sm transition-all duration-200 border bg-transparent"
             style="color: var(--color-secondary); border-color: var(--color-secondary);"
             onmouseenter={(e) => { e.currentTarget.style.background = 'var(--color-secondary)'; e.currentTarget.style.color = 'var(--color-overlay-bg)'; }}
@@ -292,7 +413,7 @@ cp .env.example .env          <span style="color: var(--color-muted);"># set LUM
 docker compose up -d          <span style="color: var(--color-muted);"># web on :3000, API on :8080</span></pre>
       </div>
       <p class="text-sm" style="color: var(--color-text-dim);">
-        See the <a href="#/docs" style="color: var(--color-primary);">full documentation</a> for standalone setup, environment variables, and configuration.
+        See the <a href="/docs" style="color: var(--color-primary);">full documentation</a> for standalone setup, environment variables, and configuration.
       </p>
     </section>
 
