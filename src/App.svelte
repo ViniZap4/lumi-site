@@ -16,7 +16,7 @@
   const pageMeta: Record<string, { title: string; description: string }> = {
     home: {
       title: 'Lumi — Local-first note-taking',
-      description: 'A local-first, markdown-based note-taking system with TUI and web clients. Plain markdown files, real-time sync, and no vendor lock-in.',
+      description: 'A local-first, markdown-based note-taking system with real-time collaboration. Portable vaults, Yjs CRDT sync, and TUI, web, and Apple clients.',
     },
     'getting-started': {
       title: 'Getting Started — Lumi Docs',
@@ -40,7 +40,7 @@
     },
     'architecture': {
       title: 'Architecture — Lumi Docs',
-      description: 'Lumi system architecture: TUI client, Go server, Svelte web client, WebSocket sync, and peer federation.',
+      description: 'Lumi system architecture: TUI, web, and Apple clients, multi-tenant Go server, Postgres, and Yjs CRDT sync over WebSocket.',
     },
     'project-structure': {
       title: 'Project Structure — Lumi Docs',
@@ -52,7 +52,7 @@
     },
     'api-reference': {
       title: 'API Reference — Lumi Docs',
-      description: 'Lumi REST API and WebSocket reference: endpoints, authentication, request/response schemas, and peer federation.',
+      description: 'Lumi REST API and WebSocket reference: endpoints, session authentication, request/response schemas, and the Yjs sync protocol.',
     },
     'development-setup': {
       title: 'Development Setup — Lumi Docs',
@@ -185,23 +185,23 @@
   const features = [
     {
       icon: '📁',
-      title: 'Local-first',
-      desc: 'The filesystem is the single source of truth. Your notes are plain markdown files with YAML frontmatter — no database, no vendor lock-in.',
+      title: 'Local-first vaults',
+      desc: 'A vault is a portable directory of plain markdown files with YAML frontmatter. The filesystem stays the source of truth — no vendor lock-in.',
     },
     {
       icon: '🖥️',
       title: 'Multi-client',
-      desc: 'Use the terminal TUI (Bubbletea) for keyboard-driven workflows or the Svelte web client for a browser-based experience.',
+      desc: 'Terminal TUI (Bubbletea) for keyboard-driven workflows, a Svelte web client for the browser, and a native SwiftUI client for iOS, iPadOS, macOS, and visionOS.',
     },
     {
       icon: '⚡',
-      title: 'Real-time sync',
-      desc: 'Authenticated WebSocket-powered live updates keep the web client in sync. File changes propagate instantly across all connected clients.',
+      title: 'Real-time collaboration',
+      desc: 'Yjs CRDT sync over WebSocket with live presence. Concurrent edits merge conflict-free, and external file edits are diff-merged in via the filesystem watcher.',
     },
     {
       icon: '🔒',
-      title: 'Token auth',
-      desc: 'Password-gated web client with encrypted session persistence. All API and WebSocket connections are authenticated.',
+      title: 'Per-vault roles',
+      desc: 'Session-based auth with invite-link signup. Custom per-vault roles and capabilities gate every action, on a self-hosted multi-tenant server.',
     },
     {
       icon: '📝',
@@ -211,7 +211,7 @@
     {
       icon: '⌨️',
       title: 'Vim keybindings',
-      desc: 'Full vim-style navigation in both TUI and web editor. hjkl movement, modal editing, and your $EDITOR for full editing power.',
+      desc: 'Full vim-style editing everywhere: TUI motions with $EDITOR handoff, CodeMirror vim mode on the web, and a native vim engine in the Apple client.',
     },
     {
       icon: '🎨',
@@ -220,35 +220,39 @@
     },
   ];
 
-  const architectureDiagram = `┌─────────────────┐          ┌──────────────┐
-│   TUI Client    │          │  Web Client  │
-│ (Go + Bubbletea)│          │  (Svelte 5)  │
-└────────┬────────┘          └──────┬───────┘
-         │                          │
-         │ direct R/W               │ HTTP + WebSocket
-         │ + optional WS            │
-         │                          │
-         │        ┌─────────────────┘
-         │        │
-         │  ┌─────▼───────────┐     ┌─────────────┐
-         │  │   Go Server     │◄───►│ Peer Servers │
-         │  │  REST + WS Hub  │     │  (optional)  │
-         │  └─────────┬───────┘     └─────────────┘
-         │            │
-         └──────┬─────┘
-                │
-       ┌────────▼──────────┐
-       │    Filesystem     │
-       │  Markdown + YAML  │
-       │   frontmatter     │
-       └───────────────────┘`;
+  const architectureDiagram = `┌─────────────────┐  ┌──────────────┐  ┌──────────────────┐
+│   TUI Client    │  │  Web Client  │  │   Apple Client   │
+│ (Go + Bubbletea)│  │  (Svelte 5)  │  │    (SwiftUI)     │
+└────────┬────────┘  └──────┬───────┘  └────────┬─────────┘
+         │                  │                   │
+  snapshot+diff       Yjs WS + REST       Yjs WS + REST
+  REST sync           (live awareness)    (yswift + presence)
+         │                  │                   │
+         └──────────────────┼───────────────────┘
+                            │
+                  ┌─────────▼──────────┐
+                  │    lumi-server     │
+                  │  Fiber + cgo yrs   │
+                  └─────────┬──────────┘
+                            │
+              ┌─────────────┴────────────┐
+              │                          │
+       ┌──────▼──────┐         ┌─────────▼─────────┐
+       │  Postgres   │         │    Filesystem     │
+       │ users/vaults│         │  Markdown + YAML  │
+       │ roles/audit │         │  frontmatter      │
+       │  Yjs state  │         │ (source of truth) │
+       └─────────────┘         └───────────────────┘`;
 
   const techStack = [
     { name: 'Go', url: 'https://go.dev' },
+    { name: 'Fiber', url: 'https://gofiber.io' },
+    { name: 'Postgres', url: 'https://www.postgresql.org' },
+    { name: 'Yjs / y-crdt', url: 'https://github.com/y-crdt/y-crdt' },
     { name: 'Svelte 5', url: 'https://svelte.dev' },
+    { name: 'SwiftUI', url: 'https://developer.apple.com/xcode/swiftui/' },
     { name: 'Bubbletea', url: 'https://github.com/charmbracelet/bubbletea' },
     { name: 'Vite', url: 'https://vite.dev' },
-    { name: 'WebSocket', url: 'https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API' },
   ];
 
   const repos = [
@@ -256,6 +260,7 @@
     { name: 'lumi-tui', desc: 'TUI Client', url: 'https://github.com/ViniZap4/lumi-tui' },
     { name: 'lumi-server', desc: 'Server', url: 'https://github.com/ViniZap4/lumi-server' },
     { name: 'lumi-web', desc: 'Web Client', url: 'https://github.com/ViniZap4/lumi-web' },
+    { name: 'lumi-apple', desc: 'Apple Client', url: 'https://github.com/ViniZap4/lumi-apple' },
     { name: 'lumi-site', desc: 'This site', url: 'https://github.com/ViniZap4/lumi-site' },
   ];
 </script>
@@ -373,16 +378,16 @@
       </div>
       <div class="flex flex-col gap-2">
         <p class="text-sm" style="color: var(--color-text-dim);">
-          <span style="color: var(--color-primary);">TUI client</span> reads/writes the filesystem directly and can optionally connect to the server via WebSocket for real-time sync.
+          <span style="color: var(--color-primary);">TUI client</span> works on local vaults directly and syncs server-bound vaults via snapshot+diff REST — the server merges each diff into the live CRDT.
         </p>
         <p class="text-sm" style="color: var(--color-text-dim);">
-          <span style="color: var(--color-primary);">Web client</span> connects through the Go server via REST + WebSocket.
+          <span style="color: var(--color-primary);">Web and Apple clients</span> collaborate live over Yjs WebSocket sync with awareness and presence.
         </p>
         <p class="text-sm" style="color: var(--color-text-dim);">
-          <span style="color: var(--color-primary);">Servers</span> can peer with each other for multi-instance sync.
+          <span style="color: var(--color-primary);">The server</span> is a multi-tenant vault host: Postgres holds users, roles, and CRDT state, while external file edits are diff-merged in via fsnotify.
         </p>
         <p class="text-sm" style="color: var(--color-text-dim);">
-          All clients share the same note format: <span style="color: var(--color-primary);">Markdown + YAML frontmatter</span>.
+          All clients share the same note format: <span style="color: var(--color-primary);">Markdown + YAML frontmatter</span> — the filesystem stays the source of truth.
         </p>
       </div>
     </section>
@@ -409,7 +414,7 @@ git clone --recurse-submodules https://github.com/ViniZap4/lumi.git
 <span style="color: var(--color-primary);">cd</span> tui-client && go build -o lumi && ./lumi ../notes
 
 <span style="color: var(--color-muted);"># Server + Web Client (Docker)</span>
-cp .env.example .env          <span style="color: var(--color-muted);"># set LUMI_PASSWORD</span>
+cp .env.example .env          <span style="color: var(--color-muted);"># set POSTGRES_PASSWORD, LUMI_ADMIN_*</span>
 docker compose up -d          <span style="color: var(--color-muted);"># web on :3000, API on :8080</span></pre>
       </div>
       <p class="text-sm" style="color: var(--color-text-dim);">
